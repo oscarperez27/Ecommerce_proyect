@@ -1,7 +1,7 @@
 services:
-  rabbitmq:
+  rabbitmq_eco:
     image: rabbitmq:management
-    container_name: rabbitmq
+    container_name: rabbitmq_eco
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -18,7 +18,7 @@ services:
     volumes:
       - ./users:/app
     depends_on:
-      - rabbitmq
+      - rabbitmq_eco
       - db_proyect
     networks:
       - app_network
@@ -32,7 +32,6 @@ services:
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq
   db_proyect:
     image: mysql:9.2.0
-    restart: always
     environment:
       MYSQL_DATABASE: 'proyecto'
       MYSQL_USER: 'user'
