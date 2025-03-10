@@ -14,7 +14,7 @@ services:
   api_users:
     build: ./users
     ports:
-      - "3005:3001"
+      - "3001:3001"
     volumes:
       - ./users:/app
     depends_on:
