@@ -1,0 +1,51 @@
+services:
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - app_network
+
+  api_users:
+    build: ./users
+    ports:
+      - "3005:3001"
+    volumes:
+      - ./users:/app
+    depends_on:
+      - rabbitmq
+      - db_proyect
+    networks:
+      - app_network
+    env_file:
+      - ./users/.env
+    environment:
+      DB_HOST: db_proyect
+      DB_USER: user
+      DB_PASSWORD: 12345
+      DB_NAME: proyecto
+      RABBITMQ_HOST: amqp://admin:admin@rabbitmq
+  db_proyect:
+    image: mysql:9.2.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'proyecto'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: '12345'
+      MYSQL_ROOT_PASSWORD: '12345'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network  
+      
+networks:
+  app_network:
+volumes:
+  mysql_data:
