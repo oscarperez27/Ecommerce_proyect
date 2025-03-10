@@ -29,7 +29,7 @@ services:
       DB_USER: user
       DB_PASSWORD: 12345
       DB_NAME: proyecto
-      RABBITMQ_HOST: amqp://admin:admin@rabbitmq
+      RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
   db_proyect:
     image: mysql:9.2.0
     environment:
