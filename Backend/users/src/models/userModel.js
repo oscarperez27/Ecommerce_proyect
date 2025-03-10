@@ -36,4 +36,8 @@ const User = sequelize.define('User',{
     tableName: 'users', //Nombre de la tabla de bd
 });
 
+sequelize.sync({ alter: true })
+    .then(() => console.log("Tabla 'users' sincronizada correctamente"))
+    .catch(err => console.error("Error al sincronizar la tabla 'users':", err));
+
 export default User;
