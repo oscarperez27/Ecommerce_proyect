@@ -22,14 +22,13 @@ services:
       - db_proyect
     networks:
       - app_network
-    env_file:
-      - ./users/.env
     environment:
       DB_HOST: db_proyect
       DB_USER: user
       DB_PASSWORD: 12345
       DB_NAME: proyecto
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
+      PORT_EXPRESS: 3001
   db_proyect:
     image: mysql:9.2.0
     environment:
