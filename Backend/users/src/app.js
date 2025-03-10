@@ -12,4 +12,5 @@ app.use('/api/users', usersRoutes);
 app.use('/api-docs', swaggerUI.serve,
     swaggerUI.setup(swaggerSpec));
 
+
 export default app;

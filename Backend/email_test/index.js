@@ -5,5 +5,5 @@ dotenv.config();
 const PORT = process.env.PORT_EXPRESS;
 
 app.listen(PORT, () => {
-    console.log(`Servicio en el puerto ${PORT}`);
+    console.log(`Servicio en el puerto ${PORT}`)
 });
