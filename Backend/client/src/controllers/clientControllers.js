@@ -1,6 +1,7 @@
 import Client from '../models/clientModel.js';
 import { clientCreatedEvent } from '../services/rabbitServicesEvent.js';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
 
 export const getClient = async (req, res) => {
     try{
@@ -27,8 +28,18 @@ export const createClient = async (req, res) => {
             status: true,
             creationDate: new Date(),
         });
-
+        
         console.log(newClient);
+        
+        const newUser = {
+            password:"12345678",
+            username:email,
+            phone:phone
+        }
+
+        const response = await axios.post('http://api_users:3001/api/users', newUser);
+        console.log('Respuesta del servidor:', response.data);
+        
         //Agregar la funcion
         /*
         try{
