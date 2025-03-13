@@ -1,0 +1,77 @@
+services:
+  rabbitmq_eco:
+    image: rabbitmq:management
+    container_name: rabbitmq_eco
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - app_network
+  db_proyect:
+    image: mysql:9.2.0
+    environment:
+      MYSQL_DATABASE: 'proyecto'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: '12345'
+      MYSQL_ROOT_PASSWORD: '12345'
+    ports:
+      - '3306:3306'
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network 
+  api_users:
+    build: ./users
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./users:/app
+    depends_on:
+      - rabbitmq_eco
+      - db_proyect
+    networks:
+      - app_network
+    environment:
+      DB_HOST: db_proyect
+      DB_USER: user
+      DB_PASSWORD: 12345
+      DB_NAME: proyecto
+      RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
+      PORT_EXPRESS: 3001
+  api_email:
+    build: ./email_test
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./email_test:/app
+    depends_on:
+      - rabbitmq_eco
+    networks:
+      - app_network
+    environment:
+      EMAIL_USER: ejemplo@gmail.com
+      EMAIL_PASS: poner_emailpass
+      PORT_EXPRESS: 3002
+      RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
+  api_client:
+    build: ./client
+    ports:
+      - "3003:3003"
+    depends_on:
+      - db_proyect
+    networks:
+      - app_network
+    environment:
+      DB_HOST: db_proyect
+      DB_USER: user
+      DB_PASSWORD: 12345
+      DB_NAME: proyecto
+      RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
+      PORT_EXPRESS: 3003
+networks:
+  app_network:
+volumes:
+  mysql_data:
