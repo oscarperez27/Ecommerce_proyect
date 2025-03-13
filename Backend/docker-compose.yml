@@ -56,6 +56,21 @@ services:
       EMAIL_PASS: poner_emailpass
       PORT_EXPRESS: 3002
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
+  api_client:
+    build: ./client
+    ports:
+      - "3003:3003"
+    depends_on:
+      - db_proyect
+    networks:
+      - app_network
+    environment:
+      DB_HOST: db_proyect
+      DB_USER: user
+      DB_PASSWORD: 12345
+      DB_NAME: proyecto
+      RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
+      PORT_EXPRESS: 3003
 networks:
   app_network:
 volumes:
