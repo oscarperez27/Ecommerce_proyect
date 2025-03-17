@@ -17,6 +17,41 @@ export const getClient = async (req, res) => {
 export const createClient = async (req, res) => {
     const { name, last_name, email, phone, born_date, direction } = req.body;
 
+    // Validación de campos
+    if (!name || !last_name || !email || !phone || !born_date || !direction) {
+        return res.status(400).json({ message: "Campos vacíos, favor de llenar todos los campos" });
+    }
+
+    // Validación de correo
+    const regexCorreo = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!regexCorreo.test(email)) {
+        return res.status(400).json({ message: "El correo no tiene el formato apropiado" });
+    }
+
+    // Validación de teléfono
+    if (String(phone).length < 10) {
+        return res.status(400).json({ message: "El teléfono tiene menos de 10 caracteres" });
+    }
+
+    // Validación de fecha de nacimiento
+    const date = new Date(born_date);
+    if (date.toString() === 'Invalid Date') {
+        return res.status(400).json({ message: "La fecha de nacimiento no tiene el formato apropiado" });
+    }
+
+    // Validación de correo existente
+    const existing = await Client.findOne({ where: { email } });
+    if (existing) {
+        return res.status(400).json({ message: "Correo existente, favor de cambiar el correo" });
+    } 
+
+    // Validación de teléfono existente
+    const existingPhone = await Client.findOne({ where: { phone } });
+    if (existingPhone) {
+        return res.status(400).json({ message: "El teléfono ya está registrado, favor de cambiarlo" });
+    }
+
+
     try {
         const newClient = await Client.create({
             name,
@@ -61,9 +96,27 @@ export const updateClient = async (req, res) => {
     const { id } = req.params;
     const { name, last_name, email, phone, direction } = req.body;
 
+    // Validación de correo
+    const regexCorreo = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (email && !regexCorreo.test(email)) {
+        return res.status(400).json({ message: "El correo no tiene el formato apropiado" });
+    }
+
+    // Validación de teléfono
+    if (phone && String(phone).length < 10) {
+        return res.status(400).json({ message: "El teléfono tiene menos de 10 caracteres" });
+    }
+
+    // Validación de correo existente
     const existingEmail = await Client.findOne({ where: { email } });
     if (existingEmail) {
         return res.status(400).json({ message: "El Correo ya está registrado, favor de cambiarlo" });
+    }
+
+    // Validación de teléfono existente
+    const existingPhone = await Client.findOne({ where: { phone } });
+    if (existingPhone) {
+        return res.status(400).json({ message: "El teléfono ya está registrado, favor de cambiarlo" });
     }
 
     try{

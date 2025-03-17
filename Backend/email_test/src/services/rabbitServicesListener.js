@@ -7,7 +7,7 @@ dotenv.config();
 const RABBITMQ_URL = process.env.RABBITMQ_HOST;
 
 export async function userEvents() {
-    try{
+    try {
         const connection = await amqp.connect(RABBITMQ_URL);
         const channel = await connection.createChannel();
         
@@ -15,31 +15,34 @@ export async function userEvents() {
         const queue = 'user_created_queue';
         const routingKey = 'user.created';
 
-        await channel.assertExchange(exchange, 'topic', {durable:true});
-        await channel.assertQueue(queue, {durable: true});
+        await channel.assertExchange(exchange, 'topic', { durable: true });
+        await channel.assertQueue(queue, { durable: true });
         await channel.bindQueue(queue, exchange, routingKey);
 
         console.log(`Waiting for a message in ${queue}`);
-        let response = {};
-        channel.consume(queue, (msq) => {
-            if (msq != null){
-                response = JSON.parse(msq.content.toString())
-                console.log(response)
+        channel.consume(queue, async (msg) => {
+            if (msg != null) {
+                const response = JSON.parse(msg.content.toString());
+                console.log(response);
 
-                //Enviar correo
-                sendEmailWelcome(response.username);
-
-                channel.ack(msq);
+                // Enviar correo
+                try {
+                    await sendEmailWelcome(response.username);
+                    channel.ack(msg);
+                } catch (error) {
+                    console.error('Error sending welcome email:', error);
+                    channel.nack(msg, false, true); // Requeue the message
+                }
             }
-        }, {noAck: false });
+        }, { noAck: false });
 
         connection.on('close', () => {
-            console.error('Conexion cerrada, intentando reconectar en 5 seg');
+            console.error('Connection closed, attempting to reconnect in 5 seconds');
             setTimeout(userEvents, 5000);
         });
-    } catch (error){
-        console.error('Error conectando a RabbitMQ', error.message);
-        console.log('Reintentando en 5s');
+    } catch (error) {
+        console.error('Error connecting to RabbitMQ:', error.message);
+        console.log('Retrying in 5 seconds');
         setTimeout(userEvents, 5000);
     }
 }
