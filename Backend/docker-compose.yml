@@ -19,8 +19,8 @@ services:
     networks:
       - config_app_network
     environment:
-      EMAIL_USER: ejemplo@gmail.com
-      EMAIL_PASS: poner_emailpass
+      EMAIL_USER: example@gmail.com
+      EMAIL_PASS: aaaaaa
       PORT_EXPRESS: 3002
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
   api_client:

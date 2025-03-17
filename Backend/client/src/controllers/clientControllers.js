@@ -66,6 +66,7 @@ export const createClient = async (req, res) => {
         
         console.log(newClient);
         
+        /*
         const newUser = {
             password:"12345678",
             username:email,
@@ -74,15 +75,14 @@ export const createClient = async (req, res) => {
 
         const response = await axios.post('http://api_users:3001/api/users', newUser);
         console.log('Respuesta del servidor:', response.data);
+        */
         
         //Agregar la funcion
-        /*
         try{
-            await clientCreatedEvent(newClient);
+            await clientCreatedEvent(newUser);
         } catch (error){
-            console.log("Error al registrar el cliente");
+            console.log("Algo fallo");
         }
-        */
 
         return res.status(201).json({ message: "Cliente creado", data: newClient });
 

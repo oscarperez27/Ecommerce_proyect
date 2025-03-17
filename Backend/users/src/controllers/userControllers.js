@@ -167,3 +167,30 @@ export const login = async (req, res) => {
         return res.status(500).json({message:"Error"});
     }
 }
+
+export async function createUserByClient(password, username, phone){
+    
+    try {
+        const newUser = await User.create({
+            phone,
+            username,
+            password,
+            status: true,
+            creationDate: new Date(),
+        });
+
+        console.log(newUser);
+        //Agregar la funcion
+        try{
+            await userCreatedEvent(newUser);
+        } catch (error){
+            console.log("Algo fallo");
+        }
+
+        return res.status(201).json({ message: "Usuario creado", data: newUser });
+
+    } catch (error) {
+        console.error("Error al crear usuario:", error);
+        return res.status(500).json({ message: "Error al crear el usuario" });
+    }
+};
