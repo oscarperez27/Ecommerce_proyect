@@ -49,6 +49,19 @@ services:
       DB_NAME: proyecto
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
       PORT_EXPRESS: 3004
+  esb-service:
+    image: esb-service:0.0.5
+    container_name: esb-service
+    ports:
+      - "8080:3500"
+    networks:
+      - config_app_network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 networks:
   config_app_network:
     external: true
