@@ -26,6 +26,34 @@ export const getProduct = async (req, res) => {
 export const createProduct = async (req, res) => {
     const { name, price, dimensions, weight, description, productMarlk, material } = req.body;
 
+    //Validar que los campos obligatorios no estén vacíos
+    if (!name || !price || !dimensions || !weight || !description || !productMarlk || !material) {
+        return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    }
+
+    //Validar que el precio sea un número
+    if (isNaN(price)) {
+        return res.status(400).json({ message: "El precio debe ser un número" });
+    }
+
+    //Validar que el peso sea un número
+    if (isNaN(weight)) {
+        return res.status(400).json({ message: "El peso debe ser un número" });
+    }
+
+    //Validar que las dimensiones sean un número
+    if (isNaN(dimensions)) {
+        return res.status(400).json({ message: "Las dimensiones deben ser un numero" });
+    }
+    
+    /*
+    //Validar que la imagen sea un archivo de tipo imagen
+        if (req.file && !req.file.mimetype.startsWith("image")) {
+        return res.status(400).json({ message: "El archivo debe ser una imagen" });
+    }
+    */
+    
+
     try {
         // Si hay una imagen en la petición, se guarda su ruta
         let photoUrl = req.file ? `../../uploads/${req.file.filename}` : null;
@@ -58,6 +86,27 @@ const __dirname = path.dirname(new URL(import.meta.url).pathname);
 export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { price, dimensions, weight, description, productMarlk, material } = req.body;
+
+    // Validar que el producto exista
+    const productExists = await Product.findByPk(id);
+    if (!productExists) {
+        return res.status(404).json({ message: "Producto no encontrado" });
+    }
+
+    // Validar que el precio sea un número
+    if (price && isNaN(price)) {
+        return res.status(400).json({ message: "El precio debe ser un número" });
+    }
+
+    // Validar que el peso sea un número
+    if (weight && isNaN(weight)) {
+        return res.status(400).json({ message: "El peso debe ser un número" });
+    }
+
+    // Validar que las dimensiones sean un número
+    if (dimensions && isNaN(dimensions)) {
+        return res.status(400).json({ message: "Las dimensiones deben ser un número" });
+    }
 
     const photo = req.file ? `../../uploads/${req.file.filename}` : null;
 
