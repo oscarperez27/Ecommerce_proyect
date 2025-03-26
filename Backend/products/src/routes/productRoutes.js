@@ -1,16 +1,15 @@
 import express from "express";
-import { saludar, getProduct, createProduct, updateProduct } from "../controllers/productControllers.js";
+import { saludar, deleteProduct, getProduct, createProduct, updateProduct } from "../controllers/productControllers.js";
+import upload from "../config/imageConfig.js";
 
 const router = express.Router();
 
 router.get('/test', saludar);
 router.get('/', getProduct);
-router.post('/', createProduct);
-router.patch('/:id', updateProduct);
-/*
-router.delete('/:id', DeleteUsers);
-router.post('/login', login);
-*/
+router.post('/', upload.single("photo") , createProduct);
+router.patch('/:id', upload.single('photo'), updateProduct);
+router.delete('/:id', deleteProduct);
+
 /**
  * @swagger
  * tags:

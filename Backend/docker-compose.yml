@@ -49,8 +49,10 @@ services:
       DB_NAME: proyecto
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
       PORT_EXPRESS: 3004
+    volumes:
+      - image_products:/app/uploads
   esb-service:
-    image: esb-service:0.0.5
+    build: ./ebs-service
     container_name: esb-service
     ports:
       - "8080:3500"
@@ -65,3 +67,5 @@ services:
 networks:
   config_app_network:
     external: true
+volumes:
+  image_products:
