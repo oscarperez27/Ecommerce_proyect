@@ -25,3 +25,25 @@ export async function userCreatedEvent(user) {
         connection.close();
     }, 5000);
 }
+
+const RABBITMQ_EXCHANGE_FORGET = "user_event_forget";
+const RABBITMQ_ROUTING_KEY_FORGET = "user.forget";
+
+export async function userForgetEvent(username, newPassword) {
+    const connection = await amqp.connect(RABBITMQ_URL);
+    const channel = await connection.createChannel();
+
+    //Declarar el Exange
+    await channel.assertExchange(RABBITMQ_EXCHANGE_FORGET, "topic" ,{ durable:true});
+
+    //Publicar el evento
+    const message = JSON.stringify({ username, newPassword });
+    channel.publish(RABBITMQ_EXCHANGE_FORGET, RABBITMQ_ROUTING_KEY_FORGET, Buffer.from(message));
+
+    console.log(`exange "${RABBITMQ_EXCHANGE_FORGET}",
+        routing key "${RABBITMQ_ROUTING_KEY_FORGET}": ${message}`);
+
+    setTimeout(() => {
+        connection.close();
+    }, 5000);
+}

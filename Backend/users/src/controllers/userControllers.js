@@ -1,6 +1,7 @@
 import User from '../models/userModel.js';
-import { userCreatedEvent } from '../services/rabbitServicesEvent.js';
+import { userCreatedEvent, userForgetEvent } from '../services/rabbitServicesEvent.js';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 export const saludar = async (req, res) => {
     try{
@@ -192,5 +193,38 @@ export async function createUserByClient(password, username, phone){
     } catch (error) {
         console.error("Error al crear usuario:", error);
         return res.status(500).json({ message: "Error al crear el usuario" });
+    }
+};
+
+export const forgetPassword = async (req, res) => {
+    const { username } = req.body;
+
+    try{
+        const user = await User.findOne({
+            where: { username: username }
+        });
+        
+        if (!user){
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        //Generador de passwords
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < 10; i++) {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            result += characters[randomIndex];
+        }
+
+        await user.update({
+            password: result,
+        });
+
+        userForgetEvent(username, result);
+
+        return res.status(201).json({ message: "Usuario olvido la contraseña" });
+    } catch (error) {
+        console.error("Error al restablecer contraseña:", error);
+        return res.status(500).json({ message: "Error al restablecer contraseña del usuario" });
     }
 };

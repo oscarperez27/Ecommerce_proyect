@@ -37,3 +37,20 @@ export async function sendEmailWelcome(to){
         console.log(error);
     }
 };
+
+export async function sendEmailForgetPassword(to, newPass){
+    let subject = "Forget password";
+    let username = to;
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to,
+            subject,
+            template: 'recover', // Nombre de la plantilla sin extensión (views/emails/Welcome.hbs)
+            context: { username, newPass } // Pasar variables a la plantilla
+        });
+
+    } catch (error) {
+        console.log(error);
+    }
+};
