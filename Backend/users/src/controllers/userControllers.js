@@ -1,7 +1,6 @@
 import User from '../models/userModel.js';
 import { userCreatedEvent, userForgetEvent } from '../services/rabbitServicesEvent.js';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 
 export const saludar = async (req, res) => {
     try{
