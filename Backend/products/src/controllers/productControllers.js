@@ -12,6 +12,9 @@ export const saludar = async (req, res) => {
     }
 };
 
+// Validar cadenas vacías
+const isValidString = (value, maxLength = 255) => typeof value === 'string' && value.trim().length > 0 && value.length <= maxLength;
+
 export const getProduct = async (req, res) => {
     try{
         const Products = await Product.findAll();
@@ -26,9 +29,9 @@ export const getProduct = async (req, res) => {
 export const createProduct = async (req, res) => {
     const { name, price, dimensions, weight, description, productMarlk, material } = req.body;
 
-    //Validar que los campos obligatorios no estén vacíos
-    if (!name || !price || !dimensions || !weight || !description || !productMarlk || !material) {
-        return res.status(400).json({ message: "Todos los campos son obligatorios" });
+    // Validar que los campos obligatorios no estén vacíos
+    if (!isValidString(name) || !isValidString(dimensions) || !isValidString(description) || !isValidString(productMarlk) || !isValidString(material)) {
+        return res.status(400).json({ message: "Campos vacíos o inválidos, favor de llenar todos los campos correctamente" });
     }
 
     //Validar que el precio sea un número
@@ -41,11 +44,12 @@ export const createProduct = async (req, res) => {
         return res.status(400).json({ message: "El peso debe ser un número" });
     }
 
-    //Validar que las dimensiones sean un número
-    if (isNaN(dimensions)) {
-        return res.status(400).json({ message: "Las dimensiones deben ser un numero" });
+    //Validar las dimensiones que acepte cm y m
+    const dimensionRegex = /^(?:\d+(?:\.\d+)?\s*(?:cm|m))$/i;
+    if (!dimensionRegex.test(dimensions)) {
+        return res.status(400).json({ message: "Las dimensiones deben tener el formato correcto" });
     }
-    
+
     /*
     //Validar que la imagen sea un archivo de tipo imagen
         if (req.file && !req.file.mimetype.startsWith("image")) {
@@ -103,9 +107,17 @@ export const updateProduct = async (req, res) => {
         return res.status(400).json({ message: "El peso debe ser un número" });
     }
 
-    // Validar que las dimensiones sean un número
-    if (dimensions && isNaN(dimensions)) {
-        return res.status(400).json({ message: "Las dimensiones deben ser un número" });
+    if (dimensions !== undefined && !isValidString(dimensions)) {
+        return res.status(400).json({ message: "Dimensiones inválidas" });
+    }
+    if (description !== undefined && !isValidString(description)) {
+        return res.status(400).json({ message: "Descripción inválida" });
+    }
+    if (productMarlk !== undefined && !isValidString(productMarlk)) {
+        return res.status(400).json({ message: "Marca del producto inválida" });
+    }
+    if (material !== undefined && !isValidString(material)) {
+        return res.status(400).json({ message: "Material inválido" });
     }
 
     const photo = req.file ? `../../uploads/${req.file.filename}` : null;
