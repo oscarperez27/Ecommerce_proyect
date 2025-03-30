@@ -9,6 +9,10 @@ export const saludar = async (req, res) => {
     }
 };
 
+// Validar cadenas vacias
+const isValidString = (value, maxLength = 255) => typeof value === 'string' && value.trim().length > 0 && value.length <= maxLength;
+
+
 // Obtener todos los envíos
 export const getSends = async (req, res) => {
     try {
@@ -23,8 +27,15 @@ export const getSends = async (req, res) => {
 export const createSend = async (req, res) => {
     const { weight, packageDimensions, destination, origin, address, costumerName, fragile, extraInformation } = req.body;
 
-    if (!weight || !packageDimensions || !destination || !origin || !address || !costumerName || !fragile || !extraInformation) {
-        return res.status(400).json({ message: 'Campos vacíos, favor de llenar todos los campos' });
+    if (!weight || !isValidString(packageDimensions) || !isValidString(destination) || !isValidString(origin) || !isValidString(address) || !isValidString(costumerName) || fragile === undefined || !isValidString(extraInformation)) {
+        return res.status(400).json({ message: 'Campos vacíos o inválidos, favor de llenar todos los campos correctamente' });
+    }
+
+    if (typeof weight !== 'number' || weight <= 0) {
+        return res.status(400).json({ message: 'El peso debe ser un número positivo y puede contener decimales' });
+    }
+    if (typeof fragile !== 'boolean') {
+        return res.status(400).json({ message: 'Fragile debe ser un valor booleano' });
     }
 
     try {
@@ -53,6 +64,36 @@ export const updateSend = async (req, res) => {
     const { id } = req.params;
     const { weight, packageDimensions, destination, origin, address, costumerName, fragile, extraInformation } = req.body;
 
+    if (!id || !Number.isInteger(Number(id))) {
+        return res.status(400).json({ message: 'ID inválido, debe ser un número entero' });
+    }
+
+    if (weight !== undefined && (typeof weight !== 'number' || weight <= 0)) {
+        return res.status(400).json({ message: 'El peso debe ser un número positivo y puede contener decimales' });
+    }
+    if (fragile !== undefined && typeof fragile !== 'boolean') {
+        return res.status(400).json({ message: 'Fragile debe ser un valor booleano' });
+    }
+    if (packageDimensions !== undefined && !isValidString(packageDimensions)) {
+        return res.status(400).json({ message: 'Dimensiones del paquete inválidas' });
+    }
+    if (destination !== undefined && !isValidString(destination)) {
+        return res.status(400).json({ message: 'Destino inválido' });
+    }
+    if (origin !== undefined && !isValidString(origin)) {
+        return res.status(400).json({ message: 'Origen inválido' });
+    }
+    if (address !== undefined && !isValidString(address)) {
+        return res.status(400).json({ message: 'Dirección inválida' });
+    }
+    if (costumerName !== undefined && !isValidString(costumerName)) {
+        return res.status(400).json({ message: 'Nombre del cliente invalido' });
+    }
+    if (extraInformation !== undefined && !isValidString(extraInformation)) {
+        return res.status(400).json({ message: 'Informacion adicional invalida ' });
+    }
+
+
     try {
         const send = await Send.findByPk(id);
         if (!send) {
@@ -80,8 +121,8 @@ export const updateSend = async (req, res) => {
 export const deleteSend = async (req, res) => {
     const { id } = req.params;
 
-    if (!id || isNaN(id)) {
-        return res.status(400).json({ message: 'ID inválido' });
+    if (!id || !Number.isInteger(Number(id))) {
+        return res.status(400).json({ message: 'ID inválido, debe ser un número entero' });
     }
 
     try {
@@ -102,8 +143,8 @@ export const deleteSend = async (req, res) => {
 export const deliveredSend = async (req, res) => {
     const { id } = req.params;
 
-    if (!id || isNaN(id)) {
-        return res.status(400).json({ message: 'ID inválido' });
+    if (!id || !Number.isInteger(Number(id))) {
+        return res.status(400).json({ message: 'ID inválido, debe ser un número entero' });
     }
 
     try {
