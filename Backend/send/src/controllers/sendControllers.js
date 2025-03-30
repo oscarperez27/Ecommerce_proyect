@@ -37,6 +37,7 @@ export const createSend = async (req, res) => {
             costumerName,
             fragile,
             extraInformation,
+            delivered: false,
             creationDate: new Date(),
         });
 
@@ -95,5 +96,30 @@ export const deleteSend = async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar el envío:', error);
         return res.status(500).json({ message: 'Error al eliminar el envío' });
+    }
+};
+
+export const deliveredSend = async (req, res) => {
+    const { id } = req.params;
+
+    if (!id || isNaN(id)) {
+        return res.status(400).json({ message: 'ID inválido' });
+    }
+
+    try {
+        const send = await Send.findByPk(id);
+        if (!send) {
+            return res.status(404).json({ message: 'Envío no encontrado' });
+        }
+
+        await send.update({
+            delivered: true,
+            deliveryDate: new Date(),
+        });
+
+        return res.status(201).json({ message: 'Envío entregado', data: send });
+    } catch (error) {
+        console.error('Error al eliminar el envío:', error);
+        return res.status(500).json({ message: 'Error al entregar el envío' });
     }
 };

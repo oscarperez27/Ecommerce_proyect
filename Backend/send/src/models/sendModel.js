@@ -39,7 +39,18 @@ const send = sequelize.define('Send', {
     extraInformation: {
         type: DataTypes.STRING,
         allowNull: false,
-    },    
+    },   
+    extraInformation: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    }, 
+    delivered: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+    },
+    deliveryDate: {
+        type: DataTypes.DATE
+    },
     creationDate: {
         type: DataTypes.DATE,
         allowNull:false,
