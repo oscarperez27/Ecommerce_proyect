@@ -20,7 +20,7 @@ services:
       - config_app_network
     environment:
       EMAIL_USER: goku43210@gmail.com
-      EMAIL_PASS: ycbcaolujkdmegsw
+      EMAIL_PASS: azsdfghjk
       PORT_EXPRESS: 3002
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
   api_client:
