@@ -40,10 +40,6 @@ const send = sequelize.define('Send', {
         type: DataTypes.STRING,
         allowNull: false,
     },   
-    extraInformation: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    }, 
     delivered: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
