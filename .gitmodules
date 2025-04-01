@@ -1,0 +1,3 @@
+[submodule "Frontend/ECommerceApp"]
+	path = Frontend/ECommerceApp
+	url = https://github.com/oscarperez27/Ecommerce_proyect
