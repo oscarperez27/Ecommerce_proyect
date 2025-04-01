@@ -1,6 +1,7 @@
 import User from '../models/userModel.js';
 import { userCreatedEvent, userForgetEvent } from '../services/rabbitServicesEvent.js';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 export const saludar = async (req, res) => {
     try{
@@ -21,19 +22,12 @@ export const getUsers = async (req, res) => {
     }
 };
 
-// Validar cadenas vacías
-const isValidString = (value, maxLength = 255) => typeof value === 'string' && value.trim().length > 0 && value.length <= maxLength;
-
 export const createUser = async (req, res) => {
     const { password, username, phone } = req.body;
 
     // Validación de campos
     if (!phone || !username || !password) {
         return res.status(400).json({ message: "Campos vacíos, favor de llenar todos los campos" });
-    }
-
-    if (!isValidString(username)) {
-        return res.status(400).json({ message: "Usuario inválido, favor de llenar correctamente" });
     }
 
     // Validación de username/correo
@@ -100,9 +94,6 @@ export const updateUser = async (req, res) => {
     /*tamaño de contraseña */
     if (password.length < 8) {  // Corregido el mensaje
         return res.status(400).json({ message: "El password debe tener al menos 8 caracteres" });
-    }
-    if (password !== undefined && !isValidString(password)) {
-        return res.status(400).json({ message: "Contraseña inválida" });
     }
     //Validacion de telefono
     /*telefono no reguistrado, tamaño del telefono */

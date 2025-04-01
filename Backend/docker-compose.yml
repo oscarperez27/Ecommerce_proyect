@@ -20,7 +20,7 @@ services:
       - config_app_network
     environment:
       EMAIL_USER: goku43210@gmail.com
-      EMAIL_PASS: azsdfghjk
+      EMAIL_PASS: aaaaaaa
       PORT_EXPRESS: 3002
       RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
   api_client:
@@ -51,21 +51,6 @@ services:
       PORT_EXPRESS: 3004
     volumes:
       - image_products:/app/uploads
-  api_send:
-      build:
-        context: ./send
-        dockerfile: Dockerfile
-      ports:
-        - "3005:3005"
-      networks:
-        - config_app_network
-      environment:
-        DB_HOST: db_proyect
-        DB_USER: user
-        DB_PASSWORD: 12345
-        DB_NAME: proyecto
-        RABBITMQ_HOST: amqp://admin:admin@rabbitmq_eco
-        PORT_EXPRESS: 3005
   esb-service:
     build: ./ebs-service
     container_name: esb-service
