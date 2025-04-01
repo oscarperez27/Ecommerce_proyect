@@ -1,6 +1,7 @@
 package com.utd.ti.soa.ebs_service.controller;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -8,19 +9,19 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.utd.ti.soa.ebs_service.model.User;
 import com.utd.ti.soa.ebs_service.utils.Auth;
 
-import io.jsonwebtoken.Claims;
-
-import com.utd.ti.soa.ebs_service.model.Client;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/v1/esb")
@@ -28,126 +29,135 @@ public class ESBcontroller {
     private final WebClient webClient = WebClient.create();
     private final Auth auth = new Auth();
 
-    @PostMapping("/user")
-    public ResponseEntity<?> createUser(@RequestBody User user,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        System.out.println("Request Body: " + user);
-        System.out.println("Token recibido: " + token);
-
-        // Validar token
+    @PostMapping(value = "/user", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> createUser(@RequestBody User user,
+                                                   @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         if (!auth.validToken(token)) {
-            return ResponseEntity.status(401)
-                    .body("Token invalido o expirado");
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido"));
         }
 
-        // Enviar solicitud a servicio externo
-        String response = webClient.post()
+        System.out.println("Enviando solicitud a Node.js con usuario: " + user.getUsername());
+
+        return webClient.post()
                 .uri("http://api_users:3001/api/users")
+                .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(user)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        return ResponseEntity.ok().body(response);
+                .map(response -> {
+                    System.out.println("✅ Respuesta del servicio Node.js: " + response);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    return ResponseEntity.ok().headers(headers).body(response);
+                })
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
 
-    @PatchMapping("/user/{id}")
-    public ResponseEntity<String> updateUser(@PathVariable String id,
-            @RequestBody User user,
-            @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-        System.out.println("Request Body: " + user);
-        System.out.println("Token recibido: " + token);
-
-        // Validar token
+    @GetMapping(value = "/user", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> getAllUsers(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         if (!auth.validToken(token)) {
-            return ResponseEntity.status(401)
-                    .body("Token invalido o expirado");
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido"));
         }
 
-        System.out.println("Updating user with ID: " + id + " Data: " + user);
+        System.out.println("📤 Enviando solicitud a Node.js para obtener todos los usuarios");
 
-        String response = webClient.patch()
-                .uri("http://api_users:3001/api/users/{id}", id)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .body(BodyInserters.fromValue(user))
-                .retrieve()
-                .bodyToMono(String.class)
-                .doOnError(e -> System.out.println("Error: " + e.getMessage()))
-                .block();
-
-        return ResponseEntity.ok().body(response);
-    }
-
-    @GetMapping("/user")
-    public ResponseEntity<String> recolectUsers(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-
-        System.out.println("Token recibido: " + token);
-    
-        // Validar token
-        if (!auth.validToken(token)) {
-            return ResponseEntity.status(401)
-                    .body("Token invalido o expirado");
-        }
-        String response = webClient.get()
+        return webClient.get()
                 .uri("http://api_users:3001/api/users")
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        return ResponseEntity.ok(response);
+                .map(response -> ResponseEntity.ok().body(response))
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
 
-    @DeleteMapping("/user/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable String id, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
-
-        System.out.println("Token recibido: " + token);
-    
-        // Validar token
+    @PatchMapping(value = "/user/update/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> updateUser(@PathVariable("id") String id,
+                                                   @RequestBody User user,
+                                                   @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         if (!auth.validToken(token)) {
-            return ResponseEntity.status(401)
-                    .body("Token invalido o expirado");
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido"));
         }
-        String response = webClient.delete()
-                .uri("http://api_users:3001/api/users/{id}", id)
+
+        return webClient.patch()
+                .uri("http://api_users:3001/api/users/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(user)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        return ResponseEntity.ok().body(response);
+                .map(response -> ResponseEntity.ok().body(response))
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
 
-    @PostMapping("/user/login")
-    public ResponseEntity<?> loginUser(@RequestBody User user) {
+    @DeleteMapping(value = "/user/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> deleteUser(@PathVariable("id") String id,
+                                                   @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        if (!auth.validToken(token)) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no válido"));
+        }
 
-        System.out.println("Request Body: " + user);
+        return webClient.delete()
+                .uri("http://api_users:3001/api/users/" + id)
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(response -> ResponseEntity.ok().body(response))
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
+    }
 
-        // Enviar solicitud a servicio externo
-        String response = webClient.post()
+
+    @PostMapping(value = "/user/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> loginUser(@RequestBody User user) {
+
+        System.out.println("Enviando solicitud a Node.js con usuario: " + user.getUsername());
+
+        return webClient.post()
                 .uri("http://api_users:3001/api/users/login")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(user)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-        return ResponseEntity.ok().body(response);
+                .map(response -> {
+                    System.out.println("✅ Respuesta del servicio Node.js: " + response);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    return ResponseEntity.ok().headers(headers).body(response);
+                })
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
 
-    @PostMapping("/user/forgetPass")
-    public ResponseEntity<?> forgetPassUser(@RequestBody User user) {
+    @PostMapping(value = "/user/forgetPass", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> forgetPassUser(@RequestBody User user) {
 
-        System.out.println("Request Body: " + user);
+        System.out.println("Enviando solicitud a Node.js con usuario: " + user.getUsername());
 
-        // Enviar solicitud a servicio externo
-        String response = webClient.post()
+        return webClient.post()
                 .uri("http://api_users:3001/api/users/forgetpass")
+                .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(user)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
-
-
-        return ResponseEntity.ok().body(response);
+                .map(response -> {
+                    System.out.println("✅ Respuesta del servicio Node.js: " + response);
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+                    return ResponseEntity.ok().headers(headers).body(response);
+                })
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
-
 }

@@ -3,6 +3,9 @@ import { clientCreatedEvent } from '../services/rabbitServicesEvent.js';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
 
+// Validar cadenas vacías
+const isValidString = (value, maxLength = 255) => typeof value === 'string' && value.trim().length > 0 && value.length <= maxLength;
+
 export const getClient = async (req, res) => {
     try{
         const client = await Client.findAll();
@@ -18,8 +21,8 @@ export const createClient = async (req, res) => {
     const { name, last_name, email, phone, born_date, direction } = req.body;
 
     // Validación de campos
-    if (!name || !last_name || !email || !phone || !born_date || !direction) {
-        return res.status(400).json({ message: "Campos vacíos, favor de llenar todos los campos" });
+    if (!isValidString(name) || !isValidString(last_name) || !isValidString(email) || !isValidString(direction)) {
+        return res.status(400).json({ message: "Campos vacíos o inválidos, favor de llenar todos los campos correctamente" });
     }
 
     // Validación de correo
@@ -28,7 +31,7 @@ export const createClient = async (req, res) => {
         return res.status(400).json({ message: "El correo no tiene el formato apropiado" });
     }
 
-    // Validación de teléfono
+    // Validación de telefono
     if (String(phone).length < 10) {
         return res.status(400).json({ message: "El teléfono tiene menos de 10 caracteres" });
     }
@@ -66,23 +69,8 @@ export const createClient = async (req, res) => {
         
         console.log(newClient);
         
-        /*
-        const newUser = {
-            password:"12345678",
-            username:email,
-            phone:phone
-        }
-
-        const response = await axios.post('http://api_users:3001/api/users', newUser);
-        console.log('Respuesta del servidor:', response.data);
-        */
-        
         //Agregar la funcion
-        try{
-            await clientCreatedEvent(newUser);
-        } catch (error){
-            console.log("Algo fallo");
-        }
+        await clientCreatedEvent(newClient);
 
         return res.status(201).json({ message: "Cliente creado", data: newClient });
 
@@ -95,6 +83,19 @@ export const createClient = async (req, res) => {
 export const updateClient = async (req, res) => {
     const { id } = req.params;
     const { name, last_name, email, phone, direction } = req.body;
+
+    if (name !== undefined && !isValidString(name)) {
+        return res.status(400).json({ message: "Nombre inválido" });
+    }
+    if (last_name !== undefined && !isValidString(last_name)) {
+        return res.status(400).json({ message: "Apellido inválido" });
+    }
+    if (email !== undefined && !isValidString(email)) {
+        return res.status(400).json({ message: "Correo inválido" });
+    }
+    if (direction !== undefined && !isValidString(direction)) {
+        return res.status(400).json({ message: "Dirección inválida" });
+    }
 
     // Validación de correo
     const regexCorreo = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

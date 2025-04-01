@@ -11,8 +11,7 @@ public class Send {
     private String destination;
     private String origin;
     private String address;
-    private String fragile;
+    private boolean fragile;
     private String extraInformation;
-    private String delivered;
-    private String deliveryDate;
+    private String costumerName;
 }

@@ -1,7 +1,6 @@
 import User from '../models/userModel.js';
 import { userCreatedEvent, userForgetEvent } from '../services/rabbitServicesEvent.js';
 import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
 
 export const saludar = async (req, res) => {
     try{
@@ -22,12 +21,19 @@ export const getUsers = async (req, res) => {
     }
 };
 
+// Validar cadenas vacías
+const isValidString = (value, maxLength = 255) => typeof value === 'string' && value.trim().length > 0 && value.length <= maxLength;
+
 export const createUser = async (req, res) => {
     const { password, username, phone } = req.body;
 
     // Validación de campos
     if (!phone || !username || !password) {
         return res.status(400).json({ message: "Campos vacíos, favor de llenar todos los campos" });
+    }
+
+    if (!isValidString(username)) {
+        return res.status(400).json({ message: "Usuario inválido, favor de llenar correctamente" });
     }
 
     // Validación de username/correo
@@ -43,11 +49,9 @@ export const createUser = async (req, res) => {
     }
 
     // Validación de phone (convertido a string para evitar errores)
-    /*
     if (String(phone).length < 10) {
         return res.status(400).json({ message: "El teléfono tiene menos de 10 caracteres" });
     }
-    */
 
     const existingPhone = await User.findOne({ where: { phone } });
     if (existingPhone) {
@@ -55,11 +59,9 @@ export const createUser = async (req, res) => {
     }
 
     // Validación de password
-    /*
     if (password.length < 8) {  // Corregido el mensaje
         return res.status(400).json({ message: "El password debe tener al menos 8 caracteres" });
     }
-    */
 
     try {
         const newUser = await User.create({
@@ -94,6 +96,9 @@ export const updateUser = async (req, res) => {
     /*tamaño de contraseña */
     if (password.length < 8) {  // Corregido el mensaje
         return res.status(400).json({ message: "El password debe tener al menos 8 caracteres" });
+    }
+    if (password !== undefined && !isValidString(password)) {
+        return res.status(400).json({ message: "Contraseña inválida" });
     }
     //Validacion de telefono
     /*telefono no reguistrado, tamaño del telefono */
@@ -161,7 +166,7 @@ export const login = async (req, res) => {
     
             return res.status(200).json({message:"User start login", data:token});
         }else{
-            return res.status(200).json({message:"No existe el usuario"});
+            return res.status(200).json({message:"Usert or password incorrect"});
         }
     }catch(error){
         console.error("Error :", error);
@@ -170,7 +175,7 @@ export const login = async (req, res) => {
 }
 
 export async function createUserByClient(password, username, phone){
-    
+
     try {
         const newUser = await User.create({
             phone,
@@ -188,11 +193,11 @@ export async function createUserByClient(password, username, phone){
             console.log("Algo fallo");
         }
 
-        return res.status(201).json({ message: "Usuario creado", data: newUser });
+        return { success: true, data: newUser };
 
     } catch (error) {
         console.error("Error al crear usuario:", error);
-        return res.status(500).json({ message: "Error al crear el usuario" });
+        return { success: false, message: "Error al crear el usuario", error: error.message };
     }
 };
 

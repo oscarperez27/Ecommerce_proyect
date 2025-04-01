@@ -26,17 +26,21 @@ export const getSends = async (req, res) => {
 
 export const createSend = async (req, res) => {
     const { weight, packageDimensions, destination, origin, address, costumerName, fragile, extraInformation } = req.body;
-
+    
+    console.log(1641561);
+    console.log(costumerName);
+    /*
     if (!weight || !isValidString(packageDimensions) || !isValidString(destination) || !isValidString(origin) || !isValidString(address) || !isValidString(costumerName) || fragile === undefined || !isValidString(extraInformation)) {
         return res.status(400).json({ message: 'Campos vacíos o inválidos, favor de llenar todos los campos correctamente' });
     }
-
+    
     if (typeof weight !== 'number' || weight <= 0) {
         return res.status(400).json({ message: 'El peso debe ser un número positivo y puede contener decimales' });
     }
     if (typeof fragile !== 'boolean') {
         return res.status(400).json({ message: 'Fragile debe ser un valor booleano' });
     }
+    */
 
     try {
         const newSend = await Send.create({
@@ -45,8 +49,8 @@ export const createSend = async (req, res) => {
             destination,
             origin,
             address,
-            costumerName,
             fragile,
+            costumerName,
             extraInformation,
             delivered: false,
             creationDate: new Date(),
@@ -64,6 +68,7 @@ export const updateSend = async (req, res) => {
     const { id } = req.params;
     const { weight, packageDimensions, destination, origin, address, costumerName, fragile, extraInformation } = req.body;
 
+    /*
     if (!id || !Number.isInteger(Number(id))) {
         return res.status(400).json({ message: 'ID inválido, debe ser un número entero' });
     }
@@ -92,7 +97,7 @@ export const updateSend = async (req, res) => {
     if (extraInformation !== undefined && !isValidString(extraInformation)) {
         return res.status(400).json({ message: 'Informacion adicional invalida ' });
     }
-
+    */
 
     try {
         const send = await Send.findByPk(id);

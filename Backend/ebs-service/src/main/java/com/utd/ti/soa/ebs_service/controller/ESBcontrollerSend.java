@@ -19,23 +19,25 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import com.utd.ti.soa.ebs_service.utils.Auth;
 
 import reactor.core.publisher.Mono;
+
 import com.utd.ti.soa.ebs_service.model.Client;
+import com.utd.ti.soa.ebs_service.model.Send;
 
 @RestController
 @RequestMapping("/api/v1/esb")
-public class ESBcontrollerClient {
+public class ESBcontrollerSend {
     private final WebClient webClient = WebClient.create();
     private final Auth auth = new Auth();
 
-    @PostMapping(value = "/client", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<String>> createClient(@RequestBody Client client) {
+    @PostMapping(value = "/send", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> createSend(@RequestBody Send send) {
 
         System.out.println("Enviando solicitud a Node.js user");
 
         return webClient.post()
-                .uri("http://api_client:3003/api/client")
+                .uri("http://api_send:3005/api/send")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(client)
+                .bodyValue(send)
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(response -> {
@@ -50,8 +52,8 @@ public class ESBcontrollerClient {
                         Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
 
-    @GetMapping(value = "/client", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<String>> getAllClients(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+    @GetMapping(value = "/send", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> getAllSends(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         if (!auth.validToken(token)) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido"));
         }
@@ -59,7 +61,7 @@ public class ESBcontrollerClient {
         System.out.println("📤 Enviando solicitud a Node.js para obtener todos los clientes");
 
         return webClient.get()
-                .uri("http://api_client:3003/api/client")
+                .uri("http://api_send:3005/api/send")
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(response -> ResponseEntity.ok().body(response))
@@ -69,18 +71,18 @@ public class ESBcontrollerClient {
                         Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
 
-    @PatchMapping(value = "/client/update/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<String>> updateUser(@PathVariable("id") String id,
-                                                   @RequestBody Client client,
+    @PatchMapping(value = "/send/update/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> updateSend(@PathVariable("id") String id,
+                                                   @RequestBody Send send,
                                                    @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         if (!auth.validToken(token)) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido"));
         }
 
         return webClient.patch()
-                .uri("http://api_client:3003/api/client/" + id)
+                .uri("http://api_send:3005/api/send/" + id)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(client)
+                .bodyValue(send)
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(response -> ResponseEntity.ok().body(response))
@@ -89,16 +91,15 @@ public class ESBcontrollerClient {
                 .onErrorResume(e ->
                         Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
-
-    @DeleteMapping(value = "/client/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<String>> deleteUser(@PathVariable("id") String id,
+    @DeleteMapping(value = "/send/delete/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> deleteSend(@PathVariable("id") String id,
                                                    @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
         if (!auth.validToken(token)) {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token no válido"));
         }
 
         return webClient.delete()
-                .uri("http://api_client:3003/api/client/" + id)
+                .uri("http://api_send:3005/api/send/" + id)
                 .retrieve()
                 .bodyToMono(String.class)
                 .map(response -> ResponseEntity.ok().body(response))
