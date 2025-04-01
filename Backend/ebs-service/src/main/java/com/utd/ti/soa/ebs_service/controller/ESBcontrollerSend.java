@@ -108,4 +108,23 @@ public class ESBcontrollerSend {
                 .onErrorResume(e ->
                         Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
     }
+
+    @PatchMapping(value = "/send/deliver/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<String>> deliverSend(@PathVariable("id") String id,
+                                                   @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+        if (!auth.validToken(token)) {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token inválido"));
+        }
+
+        return webClient.patch()
+                .uri("http://api_send:3005/api/send/delivered/" + id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(response -> ResponseEntity.ok().body(response))
+                .onErrorResume(WebClientResponseException.class,
+                        e -> Mono.just(ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsString())))
+                .onErrorResume(e ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor")));
+    }
 }
